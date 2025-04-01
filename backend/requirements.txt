@@ -3,4 +3,8 @@ pyodbc==4.0.35
 openai==0.27.0
 pandas==1.5.3
 numpy==1.24.2
-# Include other libraries you need or that appear in your zipped code
+scikit-learn==1.2.2
+transformers==4.28.1
+torch==2.0.0
+# or "tensorflow" if you'd rather use TF as a backend for transformers
+# Include any other libraries from your zipped code or training scripts
