@@ -2,7 +2,6 @@ Flask==3.1.0
 pyodbc==4.0.35
 openai==0.27.0
 pandas==1.5.3
-numpy==1.24.2
 cffi==1.17.1
 click==8.1.8
 colorama==0.4.6
@@ -23,4 +22,5 @@ build
 setuptools
 gunicorn
 blinker
+numpy
 # Include other libraries you need or that appear in your zipped code
