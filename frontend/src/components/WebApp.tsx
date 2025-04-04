@@ -1,92 +1,62 @@
-import React, { useState } from 'react'
-import axios from 'axios'
-import EmotionDetector from './EmotionDetector'
+import { useState } from 'react';
+import axios from 'axios';
+import EmotionDetector from './EmotionDetector';
+import SarcasmDetector from './SarcasmDetector';
+import ClassificationDetector from './ClassificationDetector';
+import AspectsDetector from './AspectsDetector';
+import ResponseDisplay from './ResponseDisplay';
 
 interface AnalysisResponse {
-  classification?: {
-    sentiment?: string
-    sentiment_confidence?: number
-    sarcasm?: boolean
-    sarcasm_confidence?: number
-    emotion?: string
-    emotion_confidence?: number
-  }
-  ai_response?: {
-    response_text?: string
-    empathy_score?: number
-  }
-}
-
-// A single result object after analyzing text
-interface SingleResult {
-  inputText: string
-  classification?: string
-  response?: string
+  emotion: string;
+  sarcasm: string;
+  aspects: string;
+  classification: string;
+  response: string;
 }
 
 const WebApp: React.FC = () => {
-  const [text, setText] = useState('')
-  const [file, setFile] = useState<File | null>(null)
-  const [results, setResults] = useState<AnalysisResponse[]>([])
+  const [text, setText] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [results, setResults] = useState<AnalysisResponse[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setFile(e.target.files[0])
-  }
+    if (e.target.files) setFile(e.target.files[0]);
+  };
 
   const handleAnalyze = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    const messages: string[] = [];
 
-    // If user uploaded a file, parse it and do batch
     if (file) {
-      const reader = new FileReader()
-      reader.onload = async (ev) => {
-        const textContent = ev.target?.result as string
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target?.result as string;
         try {
-          let messages: string[] = []
           if (file.name.endsWith('.csv')) {
-            // Very simple CSV parsing, first column only
-            const rows = textContent
-              .split('\n')
-              .map((row) => row.split(',')[0].replace(/"/g, '').trim())
-              .filter((row) => row)
-            messages = rows
+            const rows = text.split('\n').map(row => row.split(',')[0].replace(/"/g, '')); // Simple CSV parsing
+            messages.push(...rows.filter(row => row));
           } else if (file.name.endsWith('.json')) {
-            // JSON array of objects or strings
-            const jsonData = JSON.parse(textContent)
-            // Expect each item has .message or is a string
-            messages = jsonData.map((item: any) => item.message || item)
+            const jsonData = JSON.parse(text); // JSON parsing
+            messages.push(...jsonData.map((item: any) => item.message || item));
           }
-
-          // Now call /api/respond_batch
-          // We'll do it in a single request:
-          const batchPayload = { customer_texts: messages }
-          const batchResp = await axios.post<AnalysisResponse[]>(
-            'http://localhost:5000/api/respond_batch',
-            batchPayload
-          )
-          setResults(batchResp.data)
+          const batchResults = await Promise.all(messages.map(async msg => {
+            const res = await axios.post<AnalysisResponse>('http://localhost:5000/batch-analyze', { text: msg });
+            return res.data;
+          }));
+          setResults(batchResults);
         } catch (error) {
-          console.error('Error parsing file or batch request:', error)
+          console.error('Error parsing file:', error);
         }
-      }
-      reader.readAsText(file)
+      };
+      reader.readAsText(file);
     } else if (text) {
-      // Single text approach
-      const payload = { customer_text: text }
-      try {
-        const resp = await axios.post<AnalysisResponse>(
-          'http://localhost:5000/api/respond',
-          payload
-        )
-        setResults([resp.data]) // store single result as array
-      } catch (error) {
-        console.error('Error sending single text request:', error)
-      }
+      const res = await axios.post<AnalysisResponse>('http://localhost:5000/predict', { text });
+      setResults([res.data]);
     }
-  }
+  };
 
   return (
-    <div className="row">
+    <div className="web-app row">
       <div className="col-md-6">
         <form onSubmit={handleAnalyze}>
           <textarea
@@ -96,53 +66,60 @@ const WebApp: React.FC = () => {
             className="form-control mb-2"
             rows={5}
           />
-          <input
-            type="file"
-            accept=".csv,.json"
-            onChange={handleFileChange}
-            className="form-control mb-2"
-          />
-          <button type="submit" className="btn btn-success">
-            Analyze & Generate
-          </button>
+          <input type="file" accept=".csv,.json" onChange={handleFileChange} className="form-control mb-2" />
+          <button type="submit" className="btn btn-success">Analyze & Generate</button>
         </form>
-
-        <div className="mt-3">
-          <h5>AI-generated response:</h5>
-          {results.map((r, i) => (
-            <p key={i}>
-              {r.ai_response?.response_text ?? 'No response yet'}
-            </p>
-          ))}
-        </div>
-
-        {/* If you have an endpoint for exporting results: */}
-        <button
-          onClick={() => axios.get('http://localhost:5000/export-results')}
-          className="btn btn-secondary mt-2"
-        >
-          Export to Power BI
-        </button>
-        <button className="btn btn-primary mt-2">Approve &amp; Send</button>
+        <ResponseDisplay results={results} />
+        <button onClick={() => axios.get('http://localhost:5000/export-results')} className="btn btn-secondary mt-2">Export to Power BI</button>
+        <button className="btn btn-primary mt-2">Approve & Send</button>
       </div>
-
-      <div className="col-md-6">
-        <h4>Sentiment Analysis Report</h4>
-        {results.map((r, i) => {
-          const c = r.classification
-          return (
-            <div key={i}>
-              <p>Sentiment: {c?.sentiment} (conf: {c?.sentiment_confidence})</p>
-              <p>Sarcasm: {c?.sarcasm ? 'Yes' : 'No'} (conf: {c?.sarcasm_confidence})</p>
-              <p>Emotion: {c?.emotion} (conf: {c?.emotion_confidence})</p>
-              <p>Empathy Score: {r.ai_response?.empathy_score}</p>
-              <EmotionDetector emotion={c?.emotion || ''} />
-            </div>
-          )
-        })}
+      {/* sentiment analysis report */}
+<div className="col-md-6">
+  <div className="card p-3 mb-3">
+    <h4 className="text-center mb-3">Sentiment Analysis Report</h4>
+    <div className="mb-3">
+      <div className="p-3">
+        <h5 className="text-center">Feedback Classification</h5>
+        <ClassificationDetector classification="Positive" />
       </div>
     </div>
-  )
-}
+    <div className="mb-3">
+      <div className="p-3">
+        <h5 className="text-center">Sarcasm Detector</h5>
+        <SarcasmDetector sarcasm="No sarcasm detected" />
+      </div>
+    </div>
+    <div className="mb-3">
+      <div className="p-3">
+        <h5 className="text-center">Emotion Detector</h5>
+        <EmotionDetector emotion="N/A" />
+      </div>
+    </div>
+    <div className="mb-3">
+      <div className="p-3">
+        <h5 className="text-center">Aspect-Based Sentiment Analysis</h5>
+        <AspectsDetector aspects="Product quality, Service efficiency, Delivery speed" />
+      </div>
+    </div>
+    {results.map((r, i) => (
+      <div key={i} className="mb-3">
+        <div className="p-3">
+          <h5 className="text-center">Feedback Classification</h5>
+          <ClassificationDetector classification={r.classification} />
+          <h5 className="text-center">Emotion Detector</h5>
+          <EmotionDetector emotion={r.emotion} />
+          <h5 className="text-center">Aspect-Based Sentiment Analysis</h5>
+          <AspectsDetector aspects={r.aspects} />
+          <h5 className="text-center">Sarcasm Detector</h5>
+          <SarcasmDetector sarcasm={r.sarcasm} />
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+    </div>
+  );
+};
 
-export default WebApp
+
+export default WebApp;
