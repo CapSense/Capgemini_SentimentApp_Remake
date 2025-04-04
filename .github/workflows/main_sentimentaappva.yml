@@ -78,4 +78,5 @@ jobs:
         with:
           app-name: 'SentimentaAppVA'
           slot-name: 'Production'
+          package: './backend'
           

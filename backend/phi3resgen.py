@@ -1,32 +1,39 @@
-# phi3resgen.py
-# Simple function to shape AI response. Real usage might call GPT or another LLM.
+# phi3resgen.py (UPDATED - Azure AI Studio Version)(FINAL VERSION)
+from azure.ai.inference import ChatCompletionsClient
+import os
 
 def generate_response(customer_text, classification_data):
     """
-    classification_data can have keys: 'sentiment', 'sarcasm', 'emotion', etc.
-    Return: {"response_text": "...", "empathy_score": 0.9}
+    Generates an empathetic response using Phi-3, based on:
+    - Customer feedback text
+    - Classifier outputs (sentiment, sarcasm, emotion)
+    Returns: {"response_text": str, "empathy_score": float}
     """
-    sentiment = classification_data.get("sentiment", "Neutral")
-    sarcasm = classification_data.get("sarcasm", False)
+    client = ChatCompletionsClient(
+        endpoint=os.getenv("PHI3_ENDPOINT"),
+        credential=os.getenv("PHI3_KEY")
+    )
 
-    if sentiment == "Negative":
-        response_text = (
-            "We’re sorry to hear about your experience. "
-            "We value your feedback and want to make it right."
-        )
-        empathy_score = 0.9
-    else:
-        response_text = (
-            "We’re glad to hear things are going well! "
-            "Thanks for sharing your thoughts."
-        )
-        empathy_score = 0.8
+    prompt = f"""
+    As a customer service agent, respond to this feedback:
+    
+    **Customer Feedback**: "{customer_text}"
+    **Sentiment**: {classification_data.get('sentiment', 'neutral')}
+    **Emotion**: {classification_data.get('emotion', 'unknown')}
+    **Sarcasm Detected**: {classification_data.get('sarcasm', False)}
+    
+    Write a concise, empathetic response (2-3 sentences):
+    """
 
-    # If sarcasm is detected, tweak the response
-    if sarcasm:
-        response_text += " We sense you might be a bit sarcastic—let's clarify any misunderstanding."
-
+    response = client.complete(
+        model="phi-3-mini-4k-instruct",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    
+    response_text = response.choices[0].message.content
+    empathy_score = min(len(response_text) / 150, 1.0)  # Better placeholder logic
+    
     return {
         "response_text": response_text,
-        "empathy_score": empathy_score
+        "empathy_score": round(empathy_score, 2)
     }
