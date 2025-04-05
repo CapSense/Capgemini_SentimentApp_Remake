@@ -23,7 +23,7 @@ setuptools
 gunicorn
 blinker
 numpy
-scikit
+scikit-learn
 transformers
 torch
 packinging
