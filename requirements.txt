@@ -18,7 +18,7 @@ pycryptodome
 PyMySQL
 virtualenv
 Werkzeug
-build
+# build
 setuptools
 gunicorn
 blinker
