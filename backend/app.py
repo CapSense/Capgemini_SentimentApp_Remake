@@ -32,6 +32,10 @@ def get_db_connection():
 # Optional fallback local DB (commented out)
 # from db_fallback import get_fallback_db_connection
 
+@app.route('/')
+def serve_index():
+    return send_from_directory('frontend/dist', 'index.html')
+
 @app.route('/api/respond', methods=['POST'])
 def respond_single():
     """
