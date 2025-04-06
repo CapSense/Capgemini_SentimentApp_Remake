@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Capsense AI</title>
+    <script type="module" crossorigin src="/assets/index-BJI9XKHU.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BFBNZKTZ.css">
+  </head>
+  <body>
+    <div id="root"></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('form');
+      const textarea = document.querySelector('textarea');
+      const fileInput = document.querySelector('input[type="file"]');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        let customerText = textarea.value.trim();
+
+        if (!customerText && fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const text = await file.text();
+          customerText = text.trim();
+        }
+
+        if (!customerText) {
+          alert('Please paste some feedback or upload a file.');
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/respond', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ customer_text: customerText })
+          });
+
+          if (!response.ok) {
+            throw new Error('Server error');
+          }
+
+          const result = await response.json();
+          console.log('AI Response:', result);
+          alert(AI Response: ${result.ai_response.response_text});
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Something went wrong. Please try again.');
+        }
+      });
+    });
+  </script>
+  </body>
+</html>

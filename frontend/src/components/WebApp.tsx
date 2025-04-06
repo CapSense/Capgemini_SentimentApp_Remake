@@ -40,7 +40,7 @@ const WebApp: React.FC = () => {
             messages.push(...jsonData.map((item: any) => item.message || item));
           }
           const batchResults = await Promise.all(messages.map(async msg => {
-            const res = await axios.post<AnalysisResponse>('http://localhost:5000/batch-analyze', { text: msg });
+            const res = await axios.post<AnalysisResponse>('/api/batch-analyze', { text: msg });
             return res.data;
           }));
           setResults(batchResults);
@@ -50,7 +50,7 @@ const WebApp: React.FC = () => {
       };
       reader.readAsText(file);
     } else if (text) {
-      const res = await axios.post<AnalysisResponse>('http://localhost:5000/predict', { text });
+      const res = await axios.post<AnalysisResponse>('/api/respond', { customer_text: text });
       setResults([res.data]);
     }
   };
@@ -70,7 +70,7 @@ const WebApp: React.FC = () => {
           <button type="submit" className="btn btn-success">Analyze & Generate</button>
         </form>
         <ResponseDisplay results={results} />
-        <button onClick={() => axios.get('http://localhost:5000/export-results')} className="btn btn-secondary mt-2">Export to Power BI</button>
+        <button onClick={() => axios.get('/api/export-results')} className="btn btn-secondary mt-2">Export to Power BI</button>
         <button className="btn btn-primary mt-2">Approve & Send</button>
       </div>
       {/* sentiment analysis report */}
