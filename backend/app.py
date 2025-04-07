@@ -3,7 +3,9 @@ import pyodbc
 from flask import Flask, request, jsonify, send_from_directory
 import os
 
-from apiflaskinputvaliderrorlog import validate_request_payload, log_invalid_input
+# REMOVED the import from apiflaskinputvaliderrorlog
+# from apiflaskinputvaliderrorlog import validate_request_payload, log_invalid_input
+
 from classifier_sentiment import classify_sentiment
 from classifier_sarcasm import detect_sarcasm
 from classifier_emotion import detect_emotion
@@ -30,8 +32,31 @@ def get_db_connection():
     )
     return pyodbc.connect(conn_str)
 
-# Optional fallback local DB (commented out)
-# from db_fallback import get_fallback_db_connection
+# ---------------------------------------------------------------------
+# The two small functions from apiflaskinputvaliderrorlog.py are copied
+# directly into this file, so we can remove the import entirely.
+# ---------------------------------------------------------------------
+def validate_request_payload(payload):
+    """
+    Checks if the payload is valid.
+    Returns (True, None) if valid, or (False, error_message) if invalid.
+    """
+    if not payload:
+        return (False, "Payload is empty or missing.")
+
+    # Example: we want a 'customer_text' field
+    if "customer_text" not in payload or not payload["customer_text"].strip():
+        return (False, "Field 'customer_text' is required and cannot be empty.")
+
+    # Add more checks here if needed
+    return (True, None)
+
+def log_invalid_input(error_message):
+    """
+    Logs the invalid request (to console or a file).
+    """
+    print(f"[INVALID INPUT] {error_message}")
+# ---------------------------------------------------------------------
 
 @app.route('/')
 def serve_index():
@@ -217,8 +242,4 @@ def view_dashboard():
     return jsonify(results), 200
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0',debug=True,port=5000)
-<<<<<<< HEAD
-=======
-
->>>>>>> 18da0159a028b2b05f5fcb83cc10f301c723eea5
+    app.run(host='0.0.0.0', debug=True, port=5000)
