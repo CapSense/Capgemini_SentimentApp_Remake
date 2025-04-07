@@ -1,6 +1,7 @@
 # app.py
 import pyodbc
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
+import os
 
 from apiflaskinputvaliderrorlog import validate_request_payload, log_invalid_input
 from classifier_sentiment import classify_sentiment
@@ -31,6 +32,20 @@ def get_db_connection():
 
 # Optional fallback local DB (commented out)
 # from db_fallback import get_fallback_db_connection
+
+@app.route('/')
+def serve_index():
+    return send_from_directory(
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')),
+        'index.html'
+    )
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    return send_from_directory(
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist', 'assets')),
+        filename
+    )
 
 @app.route('/api/respond', methods=['POST'])
 def respond_single():
@@ -202,4 +217,4 @@ def view_dashboard():
     return jsonify(results), 200
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+	app.run(host='0.0.0.0',debug=True,port=5000)
