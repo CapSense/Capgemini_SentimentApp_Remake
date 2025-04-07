@@ -218,3 +218,7 @@ def view_dashboard():
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0',debug=True,port=5000)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 18da0159a028b2b05f5fcb83cc10f301c723eea5

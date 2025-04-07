@@ -41,4 +41,8 @@ azure-ai-inference
 # torch==2.0.0
 # gunicorn==23.0.0
 # packaging==24.2
+<<<<<<< HEAD
 # azure-ai-inference
+=======
+# azure-ai-inference
+>>>>>>> 18da0159a028b2b05f5fcb83cc10f301c723eea5
