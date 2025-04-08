@@ -57,5 +57,3 @@ const ResponseDisplay: React.FC<Props> = ({ results }) => {
 };
 
 export default ResponseDisplay;
-
-export default ResponseDisplay;
