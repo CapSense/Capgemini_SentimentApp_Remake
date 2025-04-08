@@ -123,13 +123,20 @@ def respond_batch():
     3) Insert each into DB
     4) Return array of results
     """
-    payload = request.json
-    if not payload or "customer_texts" not in payload:
-        return jsonify({"error": "Field 'customer_texts' is required."}), 400
 
-    texts = payload["customer_texts"]
-    if not isinstance(texts, list):
-        return jsonify({"error": "'customer_texts' must be a list of strings."}), 400
+    try:
+        payload = request.json
+        if not payload or "customer_texts" not in payload:
+            return jsonify({"error": "Field 'customer_texts' is required."}), 400
+
+        texts = payload["customer_texts"]
+        if not isinstance(texts, list):
+            return jsonify({"error": "'customer_texts' must be a list of strings."}), 400
+    
+    except Exception as e:
+        return jsonify({"error payload": str(e)}), 500
+
+        
 
     results = []
     conn = get_db_connection()
@@ -218,7 +225,3 @@ def view_dashboard():
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0',debug=True,port=5000)
-<<<<<<< HEAD
-=======
-
->>>>>>> 18da0159a028b2b05f5fcb83cc10f301c723eea5
