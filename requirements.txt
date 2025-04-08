@@ -10,14 +10,13 @@ distlib
 filelock
 itsdangerous
 Jinja2
-MarkupSafe
-packaging
+markupSafe
 platformdirs
 pycparser
 pycryptodome
 PyMySQL
 virtualenv
-Werkzeug
+werkzeug
 # build
 setuptools
 gunicorn
@@ -26,7 +25,7 @@ numpy
 scikit-learn
 transformers
 torch
-packinging
+packaging==24.2
 azure-ai-inference
 # or "tensorflow" if you'd rather use TF as a backend for transformers
 # Include any other libraries from your zipped code or training scripts
@@ -40,5 +39,4 @@ azure-ai-inference
 # transformers==4.28.1
 # torch==2.0.0
 # gunicorn==23.0.0
-# packaging==24.2
 # azure-ai-inference
