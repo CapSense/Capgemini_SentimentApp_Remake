@@ -5,6 +5,7 @@ import SarcasmDetector from './SarcasmDetector';
 import ClassificationDetector from './ClassificationDetector';
 import AspectsDetector from './AspectsDetector';
 import ResponseDisplay from './ResponseDisplay';
+import '../WebApp.css';
 
 interface AnalysisResponse {
   emotion: string;
@@ -12,12 +13,13 @@ interface AnalysisResponse {
   aspects: string;
   classification: string;
   response: string;
+  originalText: string;
 }
 
 const WebApp: React.FC = () => {
-  const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [results, setResults] = useState<AnalysisResponse[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFile(e.target.files[0]);
@@ -33,93 +35,77 @@ const WebApp: React.FC = () => {
         const text = e.target?.result as string;
         try {
           if (file.name.endsWith('.csv')) {
-            const rows = text.split('\n').map(row => row.split(',')[0].replace(/"/g, '')); // Simple CSV parsing
+            const rows = text.split('\n').map(row => row.split(',')[0].replace(/"/g, ''));
             messages.push(...rows.filter(row => row));
           } else if (file.name.endsWith('.json')) {
-            const jsonData = JSON.parse(text); // JSON parsing
+            const jsonData = JSON.parse(text);
             messages.push(...jsonData.map((item: any) => item.message || item));
           }
           const batchResults = await Promise.all(messages.map(async msg => {
-            const res = await axios.post<AnalysisResponse>('/api/batch-analyze', { text: msg });
-            return res.data;
+            const res = await axios.post<AnalysisResponse>('http://localhost:5000/batch-analyze', { text: msg });
+            return { ...res.data, originalText: msg };
           }));
           setResults(batchResults);
+          setSelectedIndex(0);
         } catch (error) {
           console.error('Error parsing file:', error);
         }
       };
       reader.readAsText(file);
-    } else if (text) {
-      const res = await axios.post<AnalysisResponse>('/api/respond', { customer_text: text });
-      setResults([res.data]);
     }
+  };
+
+  const current = results[selectedIndex] || {
+    emotion: '',
+    sarcasm: '',
+    aspects: '',
+    classification: '',
+    response: '',
+    originalText: ''
   };
 
   return (
     <div className="web-app row">
+      <div className="col-12 d-flex justify-content-between align-items-center mb-3 px-4">
+      </div>
+
       <div className="col-md-6">
         <form onSubmit={handleAnalyze}>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Paste or upload feedback"
-            className="form-control mb-2"
-            rows={5}
-          />
           <input type="file" accept=".csv,.json" onChange={handleFileChange} className="form-control mb-2" />
           <button type="submit" className="btn btn-success">Analyze & Generate</button>
         </form>
-        <ResponseDisplay results={results} />
-        <button onClick={() => axios.get('/api/export-results')} className="btn btn-secondary mt-2">Export to Power BI</button>
+
+        {results.length > 0 && (
+          <select
+            className="form-select my-2"
+            value={selectedIndex}
+            onChange={(e) => setSelectedIndex(Number(e.target.value))}
+          >
+            {results.map((_, index) => (
+              <option key={index} value={index}>
+                Feedback {index + 1}
+              </option>
+            ))}
+          </select>
+        )}
+        <div >
+          <ResponseDisplay results={results} />
+        </div>
         <button className="btn btn-primary mt-2">Approve & Send</button>
       </div>
+
       {/* sentiment analysis report */}
-<div className="col-md-6">
-  <div className="card p-3 mb-3">
-    <h4 className="text-center mb-3">Sentiment Analysis Report</h4>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Feedback Classification</h5>
-        <ClassificationDetector classification="Positive" />
-      </div>
-    </div>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Sarcasm Detector</h5>
-        <SarcasmDetector sarcasm="No sarcasm detected" />
-      </div>
-    </div>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Emotion Detector</h5>
-        <EmotionDetector emotion="N/A" />
-      </div>
-    </div>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Aspect-Based Sentiment Analysis</h5>
-        <AspectsDetector aspects="Product quality, Service efficiency, Delivery speed" />
-      </div>
-    </div>
-    {results.map((r, i) => (
-      <div key={i} className="mb-3">
-        <div className="p-3">
-          <h5 className="text-center">Feedback Classification</h5>
-          <ClassificationDetector classification={r.classification} />
-          <h5 className="text-center">Emotion Detector</h5>
-          <EmotionDetector emotion={r.emotion} />
-          <h5 className="text-center">Aspect-Based Sentiment Analysis</h5>
-          <AspectsDetector aspects={r.aspects} />
-          <h5 className="text-center">Sarcasm Detector</h5>
-          <SarcasmDetector sarcasm={r.sarcasm} />
+      <div className="col-md-6">
+        <div className="card p-3 mb-3">
+          <h4 className="text-center">Sentiment Analysis Report</h4>
+          <ClassificationDetector classification={current.classification} />
+          <EmotionDetector emotion={current.emotion} />
+          <SarcasmDetector sarcasm={current.sarcasm} />
+          <AspectsDetector aspects={current.aspects} />
         </div>
       </div>
-    ))}
-  </div>
-</div>
     </div>
   );
 };
-
 
 export default WebApp;
