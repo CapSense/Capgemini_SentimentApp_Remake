@@ -22,7 +22,7 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.11'
 
       - name: Create and start virtual environment
         run: |
@@ -68,9 +68,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CDB74685B5EE4EE4B0C9107AA0EB4103 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0AABCA180718472091B84D1C6D790D7D }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4D099B97CA5E4C74BCEB1C1E72D1CE13 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_049B525216E6450193FC8309BC143C2F }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8E98EB9C5BE84A83BE1CF8308424F31B }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_91729C6B1962406B933F9C3A1EB50A1A }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -78,5 +78,4 @@ jobs:
         with:
           app-name: 'SentimentaAppVA'
           slot-name: 'Production'
-          package: './backend'
           
