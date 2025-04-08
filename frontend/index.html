@@ -28,27 +28,39 @@
           alert('Please paste some feedback or upload a file.');
           return;
         }
-
+      
         try {
-          const response = await fetch('/api/respond', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ customer_text: customerText })
-          });
+          const lines = customerText.split('\n');
+          if (lines.length === 1) {
+            const response = await fetch('/api/respond', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ customer_text: customerText })
+            });
+          }  
+          else {const response = await fetch('/api/respond_batch', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ customer_texts: customerText })
+            });
 
+          }
           if (!response.ok) {
             throw new Error('Server error');
           }
 
           const result = await response.json();
           console.log('AI Response:', result);
-          alert(AI Response: ${result.ai_response.response_text});
+          alert(`AI Response: ${result.ai_response.response_text}`); /*Was raising an error now fixed- I hope*/
         } catch (error) {
           console.error('Error:', error);
-          alert('Something went wrong. Please try again.');
+          alert('Something went wrong with the index.html. Please try again.');
         }
+        
       });
     });
   </script>
