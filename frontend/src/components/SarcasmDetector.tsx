@@ -1,9 +1,9 @@
 const SarcasmDetector = ({ sarcasm }: { sarcasm: string }) => {
   return (
-    <section className="sarcasm-detector card">
-
-      <p>{sarcasm}</p>
-    </section>
+    <div className="result-box border rounded p-3 mb-3">
+      <strong>Sarcasm Detection:</strong>
+      <p className="mt-2 mb-0 text-muted">{sarcasm || 'Awaiting analysis'}</p>
+    </div>
   );
 };
 
