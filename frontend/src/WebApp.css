@@ -1,0 +1,30 @@
+.header-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.header-icons button {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background-color: #1b1f38; /* Dark header blue */
+  color: #ffffff; /* White text */
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.header-icons button:hover {
+  background-color: #344288; /* Lighter blue on hover */
+}
+
+.topbar {
+  background-color: #bfbebe; /* Light grey background */
+}
+
+.web-app {
+  background-color: #f5e6dc; /* Beige background */
+}
+
+.min-vh-100 {
+  min-height: 100vh;
+}
