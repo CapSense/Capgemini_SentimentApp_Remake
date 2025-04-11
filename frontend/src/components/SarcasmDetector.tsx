@@ -8,4 +8,3 @@ const SarcasmDetector = ({ sarcasm }: { sarcasm: string }) => {
 };
 
 export default SarcasmDetector;
-

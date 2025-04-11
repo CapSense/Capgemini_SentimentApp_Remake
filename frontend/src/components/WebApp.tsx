@@ -4,6 +4,7 @@ import EmotionDetector from './EmotionDetector';
 import SarcasmDetector from './SarcasmDetector';
 import ClassificationDetector from './ClassificationDetector';
 import AspectsDetector from './AspectsDetector';
+import ResponseDisplay from './ResponseDisplay';
 import '../WebApp.css';
 
 interface AnalysisResponse {
@@ -66,46 +67,37 @@ const WebApp: React.FC = () => {
         const reader = new FileReader();
         reader.onload = async (e) => {
           const text = e.target?.result as string;
-          setCsvContent(text); // Store CSV content for debugging
+          setCsvContent(text);
           console.log("CSV content:", text);
           
           try {
             if (file.name.endsWith('.csv')) {
-              // Improved CSV parsing
               const rows = text.split('\n').filter(row => row.trim().length > 0);
               
-              // Check if there's a header row
               const hasHeader = rows.length > 0 && rows[0].toLowerCase().includes('tweets') || 
                                rows[0].toLowerCase().includes('text') || 
                                rows[0].toLowerCase().includes('feedback');
               
-              // Skip header if it exists
               const startIndex = hasHeader ? 1 : 0;
               
               for (let i = startIndex; i < rows.length; i++) {
                 const row = rows[i];
-                // Handle various CSV formats
                 if (row.includes(',')) {
-                  // For comma-separated values
                   const columns = row.split(',');
-                  // The first column should contain the text
                   if (columns.length > 0 && columns[0].trim()) {
                     messages.push(columns[0].replace(/"/g, '').trim());
                   }
                 } else if (row.includes(';')) {
-                  // For semicolon-separated values
                   const columns = row.split(';');
                   if (columns.length > 0 && columns[0].trim()) {
                     messages.push(columns[0].replace(/"/g, '').trim());
                   }
                 } else if (row.includes('\t')) {
-                  // For tab-separated values
                   const columns = row.split('\t');
                   if (columns.length > 0 && columns[0].trim()) {
                     messages.push(columns[0].replace(/"/g, '').trim());
                   }
                 } else if (row.trim()) {
-                  // For single column files
                   messages.push(row.replace(/"/g, '').trim());
                 }
               }
@@ -116,15 +108,12 @@ const WebApp: React.FC = () => {
                 throw new Error('No valid messages found in CSV file');
               }
               
-              // Process with batch endpoint
-              console.log("Sending to API:", { customer_texts: messages });
               const res = await axios.post('/api/respond_batch', { 
                 customer_texts: messages 
               });
               
               console.log("API response:", res.data);
               
-              // Map the batch results to our format
               const mappedResults = res.data.map((item: any) => 
                 mapToAnalysisResponse({
                   classification: item.classification,

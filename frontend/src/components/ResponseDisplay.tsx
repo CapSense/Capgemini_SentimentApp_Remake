@@ -1,21 +1,3 @@
-// Hey AJ, this is your place to paste your code for the AI-response box.
-// ResponseDisplay.tsx: This component will display the AI-generated Phi-3 model response with a "Copy" button and handle API calls.
-
-
-/*
-note for myself from AI: Yes, that could very well be the reason. If the ResponseDisplay.tsx file is currently blank or does not
-contain a default export, you will encounter the "has no default export" error when trying to import it
-in your WebApp.tsx file. SO IGNORE ERROR. actually dummy code is below, otherwise you cant run dev environment
-
- edit:
- Now always shows the original feedback (originalText)
- Properly labeled: “Feedback 1”, “User said:”, “AI Response:”
-
- edit:
- now it has white background.
-
- */
-
 import React from 'react';
 
 interface Result {
