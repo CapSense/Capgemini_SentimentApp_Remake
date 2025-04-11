@@ -45,7 +45,7 @@
 
           const result = await response.json();
           console.log('AI Response:', result);
-          alert(AI Response: ${result.ai_response.response_text});
+          alert(`AI Response: ${result.ai_response.response_text}`);
         } catch (error) {
           console.error('Error:', error);
           alert('Something went wrong. Please try again.');
