@@ -13,19 +13,31 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from transformers import pipeline
 
-sarcasm_detector = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-irony")
+# Initialize Hugging Face pipeline
+try:
+    sarcasm_detector = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-irony")
+    print("Initialized Hugging Face sarcasm pipeline successfully")
+except Exception as e:
+    print(f"Warning: Failed to initialize Hugging Face pipeline: {str(e)}")
+    sarcasm_detector = None
 
-MODEL_PATH = "models/sarcasm_classifier.pkl"
-VECTORIZER_PATH = "models/sarcasm_vectorizer.pkl"
+# Define the base directory for models using absolute path
+BASE_DIR = '/home/azureuser/Capgemini_SentimentApp_Remake/backend/models'
+MODEL_PATH = os.path.join(BASE_DIR, "sarcasm_classifier.pkl")
+VECTORIZER_PATH = os.path.join(BASE_DIR, "sarcasm_vectorizer.pkl")
 
 model = None
 vectorizer = None
 try:
-    model = joblib.load(MODEL_PATH)
-    vectorizer = joblib.load(VECTORIZER_PATH)
-    print("Loaded local sarcasm model from 'models/' folder.")
-except Exception:
-    print("Warning: No local sarcasm model found in 'models/' folder, defaulting to Hugging Face pipeline.")
+    if os.path.exists(MODEL_PATH) and os.path.exists(VECTORIZER_PATH):
+        model = joblib.load(MODEL_PATH)
+        vectorizer = joblib.load(VECTORIZER_PATH)
+        print(f"Loaded local sarcasm model from {MODEL_PATH}")
+        print(f"Loaded local sarcasm vectorizer from {VECTORIZER_PATH}")
+    else:
+        print(f"Warning: Local sarcasm model not found at {MODEL_PATH} or {VECTORIZER_PATH}")
+except Exception as e:
+    print(f"Warning: Failed to load local sarcasm model: {str(e)}")
     model, vectorizer = None, None
 
 
@@ -37,18 +49,31 @@ def detect_sarcasm(text):
     if not text:
         return {"sarcasm": False, "confidence": 0.0}
 
+    # Try local model first if available
     if model and vectorizer:
-        text_vectorized = vectorizer.transform([text])
-        prediction = model.predict(text_vectorized)
-        is_sarcastic = (prediction[0] == 1)
-        sarcasm_conf = 0.8 if is_sarcastic else 0.2
-        return {"sarcasm": is_sarcastic, "confidence": sarcasm_conf}
-    else:
-        result = sarcasm_detector(text)[0]
-        label = result["label"]
-        score = float(result["score"])
-        is_sarcastic = (label.upper() == "SARCASM")
-        return {"sarcasm": is_sarcastic, "confidence": score}
+        try:
+            text_vectorized = vectorizer.transform([text])
+            prediction = model.predict(text_vectorized)
+            is_sarcastic = (prediction[0] == 1)
+            sarcasm_conf = 0.8 if is_sarcastic else 0.2
+            return {"sarcasm": is_sarcastic, "confidence": sarcasm_conf}
+        except Exception as e:
+            print(f"Error using local sarcasm model: {str(e)}")
+            # Fall through to Hugging Face if local model fails
+    
+    # Use Hugging Face pipeline as backup
+    if sarcasm_detector:
+        try:
+            result = sarcasm_detector(text)[0]
+            label = result["label"]
+            score = float(result["score"])
+            is_sarcastic = (label.upper() == "SARCASM")
+            return {"sarcasm": is_sarcastic, "confidence": score}
+        except Exception as e:
+            print(f"Error using Hugging Face sarcasm model: {str(e)}")
+    
+    # Fallback if both methods fail
+    return {"sarcasm": False, "confidence": 0.5}
 
 
 def train_sarcasm_model(dataset_path="sarcasm_dataset.csv"):
@@ -85,7 +110,7 @@ def train_sarcasm_model(dataset_path="sarcasm_dataset.csv"):
     recall = recall_score(y_test, y_pred, pos_label=1)
     f1 = f1_score(y_test, y_pred, pos_label=1)
 
-    os.makedirs("models", exist_ok=True)
+    os.makedirs(BASE_DIR, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
     joblib.dump(vectorizer, VECTORIZER_PATH)
 

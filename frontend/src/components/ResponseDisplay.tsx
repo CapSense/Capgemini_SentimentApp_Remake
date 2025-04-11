@@ -6,12 +6,21 @@
 note for myself from AI: Yes, that could very well be the reason. If the ResponseDisplay.tsx file is currently blank or does not
 contain a default export, you will encounter the "has no default export" error when trying to import it
 in your WebApp.tsx file. SO IGNORE ERROR. actually dummy code is below, otherwise you cant run dev environment
+
+ edit:
+ Now always shows the original feedback (originalText)
+ Properly labeled: “Feedback 1”, “User said:”, “AI Response:”
+
+ edit:
+ now it has white background.
+
  */
 
 import React from 'react';
 
 interface Result {
   response: string;
+  originalText: string;
 }
 
 interface Props {
@@ -19,22 +28,22 @@ interface Props {
 }
 
 const ResponseDisplay: React.FC<Props> = ({ results }) => {
-  // Handle case where results is empty
   if (!results || results.length === 0) {
     return (
-      <div className="mt-4 p-3 border rounded">
+      <div className="mt-4 p-3 border rounded bg-white">
         <p className="text-muted">AI-generated response will appear here</p>
       </div>
     );
   }
 
-  // Display all results (responses)
   return (
     <div className="mt-4">
-      <h5>AI-generated response:</h5>
+      <h5>All AI-generated responses:</h5>
       {results.map((result, index) => (
-        <div key={index} className="p-3 border rounded mb-2">
-          <p>{result.response}</p>
+        <div key={index} className="p-3 border rounded mb-3 bg-white">
+          <strong>Feedback {index + 1}</strong>
+          <p className="mb-1"><em>User said:</em> {result.originalText}</p>
+          <p><em>AI Response:</em> {result.response}</p>
           <button
             className="btn btn-sm btn-outline-secondary"
             onClick={() => navigator.clipboard.writeText(result.response)}

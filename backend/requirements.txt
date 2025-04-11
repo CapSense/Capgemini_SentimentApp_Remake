@@ -1,7 +1,13 @@
 Flask==2.2.3
-pyodbc
-openai
-pandas
+pyodbc==4.0.35
+openai==0.27.0
+pandas==1.5.3
+numpy==1.24.2
+scikit-learn==1.2.2
+transformers==4.28.1
+torch==2.0.0
+gunicorn==23.0.0
+packaging==24.2
 cffi
 click
 colorama
@@ -28,21 +34,6 @@ transformers
 torch
 packinging
 azure-ai-inference
+
 # or "tensorflow" if you'd rather use TF as a backend for transformers
 # Include any other libraries from your zipped code or training scripts
-# after this line requirements on backend 
-# Flask==2.2.3
-# pyodbc==4.0.35
-# openai==0.27.0
-# pandas==1.5.3
-# numpy==1.24.2
-# scikit-learn==1.2.2
-# transformers==4.28.1
-# torch==2.0.0
-# gunicorn==23.0.0
-# packaging==24.2
-<<<<<<< HEAD
-# azure-ai-inference
-=======
-# azure-ai-inference
->>>>>>> 18da0159a028b2b05f5fcb83cc10f301c723eea5

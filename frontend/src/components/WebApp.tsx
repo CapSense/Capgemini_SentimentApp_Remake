@@ -4,7 +4,7 @@ import EmotionDetector from './EmotionDetector';
 import SarcasmDetector from './SarcasmDetector';
 import ClassificationDetector from './ClassificationDetector';
 import AspectsDetector from './AspectsDetector';
-import ResponseDisplay from './ResponseDisplay';
+import '../WebApp.css';
 
 interface AnalysisResponse {
   emotion: string;
@@ -12,114 +12,252 @@ interface AnalysisResponse {
   aspects: string;
   classification: string;
   response: string;
+  originalText: string;
+}
+
+interface ApiResponse {
+  classification: {
+    sentiment: string;
+    sentiment_confidence: number;
+    sarcasm: boolean;
+    sarcasm_confidence: number;
+    emotion: string;
+    emotion_confidence: number;
+  };
+  ai_response: {
+    response_text: string;
+    empathy_score: number;
+  };
 }
 
 const WebApp: React.FC = () => {
-  const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [results, setResults] = useState<AnalysisResponse[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [csvContent, setCsvContent] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFile(e.target.files[0]);
+    setError(null);
+  };
+
+  const mapToAnalysisResponse = (apiResponse: ApiResponse, originalText: string): AnalysisResponse => {
+    return {
+      emotion: apiResponse.classification.emotion,
+      sarcasm: apiResponse.classification.sarcasm ? 'Detected' : 'Not Detected',
+      aspects: `Confidence: ${(apiResponse.classification.sentiment_confidence * 100).toFixed(0)}%`,
+      classification: apiResponse.classification.sentiment.toLowerCase(),
+      response: apiResponse.ai_response.response_text,
+      originalText: originalText
+    };
   };
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
     const messages: string[] = [];
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const text = e.target?.result as string;
-        try {
-          if (file.name.endsWith('.csv')) {
-            const rows = text.split('\n').map(row => row.split(',')[0].replace(/"/g, '')); // Simple CSV parsing
-            messages.push(...rows.filter(row => row));
-          } else if (file.name.endsWith('.json')) {
-            const jsonData = JSON.parse(text); // JSON parsing
-            messages.push(...jsonData.map((item: any) => item.message || item));
+    try {
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const text = e.target?.result as string;
+          setCsvContent(text); // Store CSV content for debugging
+          console.log("CSV content:", text);
+          
+          try {
+            if (file.name.endsWith('.csv')) {
+              // Improved CSV parsing
+              const rows = text.split('\n').filter(row => row.trim().length > 0);
+              
+              // Check if there's a header row
+              const hasHeader = rows.length > 0 && rows[0].toLowerCase().includes('tweets') || 
+                               rows[0].toLowerCase().includes('text') || 
+                               rows[0].toLowerCase().includes('feedback');
+              
+              // Skip header if it exists
+              const startIndex = hasHeader ? 1 : 0;
+              
+              for (let i = startIndex; i < rows.length; i++) {
+                const row = rows[i];
+                // Handle various CSV formats
+                if (row.includes(',')) {
+                  // For comma-separated values
+                  const columns = row.split(',');
+                  // The first column should contain the text
+                  if (columns.length > 0 && columns[0].trim()) {
+                    messages.push(columns[0].replace(/"/g, '').trim());
+                  }
+                } else if (row.includes(';')) {
+                  // For semicolon-separated values
+                  const columns = row.split(';');
+                  if (columns.length > 0 && columns[0].trim()) {
+                    messages.push(columns[0].replace(/"/g, '').trim());
+                  }
+                } else if (row.includes('\t')) {
+                  // For tab-separated values
+                  const columns = row.split('\t');
+                  if (columns.length > 0 && columns[0].trim()) {
+                    messages.push(columns[0].replace(/"/g, '').trim());
+                  }
+                } else if (row.trim()) {
+                  // For single column files
+                  messages.push(row.replace(/"/g, '').trim());
+                }
+              }
+              
+              console.log("Extracted messages:", messages);
+              
+              if (messages.length === 0) {
+                throw new Error('No valid messages found in CSV file');
+              }
+              
+              // Process with batch endpoint
+              console.log("Sending to API:", { customer_texts: messages });
+              const res = await axios.post('/api/respond_batch', { 
+                customer_texts: messages 
+              });
+              
+              console.log("API response:", res.data);
+              
+              // Map the batch results to our format
+              const mappedResults = res.data.map((item: any) => 
+                mapToAnalysisResponse({
+                  classification: item.classification,
+                  ai_response: item.ai_response
+                }, item.input_text)
+              );
+              
+              setResults(mappedResults);
+              setSelectedIndex(0);
+            } else {
+              throw new Error('Please upload a CSV file');
+            }
+            
+            setLoading(false);
+          } catch (error: any) {
+            console.error('Error processing file:', error);
+            setError(`Error processing file: ${error.message || 'Unknown error'}. Please check if it\'s a valid CSV and try again.`);
+            setLoading(false);
           }
-          const batchResults = await Promise.all(messages.map(async msg => {
-            const res = await axios.post<AnalysisResponse>('/api/batch-analyze', { text: msg });
-            return res.data;
-          }));
-          setResults(batchResults);
-        } catch (error) {
-          console.error('Error parsing file:', error);
-        }
-      };
-      reader.readAsText(file);
-    } else if (text) {
-      const res = await axios.post<AnalysisResponse>('/api/respond', { customer_text: text });
-      setResults([res.data]);
+        };
+        reader.readAsText(file);
+      } else {
+        setError('Please select a CSV file first');
+        setLoading(false);
+      }
+    } catch (error: any) {
+      console.error('Error during analysis:', error);
+      setError(`Error during analysis: ${error.message || 'Unknown error'}. Please try again.`);
+      setLoading(false);
     }
   };
 
+  const current = results[selectedIndex] || {
+    emotion: '',
+    sarcasm: '',
+    aspects: '',
+    classification: '',
+    response: '',
+    originalText: ''
+  };
+
   return (
-    <div className="web-app row">
-      <div className="col-md-6">
-        <form onSubmit={handleAnalyze}>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Paste or upload feedback"
-            className="form-control mb-2"
-            rows={5}
-          />
-          <input type="file" accept=".csv,.json" onChange={handleFileChange} className="form-control mb-2" />
-          <button type="submit" className="btn btn-success">Analyze & Generate</button>
-        </form>
-        <ResponseDisplay results={results} />
-        <button onClick={() => axios.get('/api/export-results')} className="btn btn-secondary mt-2">Export to Power BI</button>
-        <button className="btn btn-primary mt-2">Approve & Send</button>
-      </div>
-      {/* sentiment analysis report */}
-<div className="col-md-6">
-  <div className="card p-3 mb-3">
-    <h4 className="text-center mb-3">Sentiment Analysis Report</h4>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Feedback Classification</h5>
-        <ClassificationDetector classification="Positive" />
-      </div>
-    </div>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Sarcasm Detector</h5>
-        <SarcasmDetector sarcasm="No sarcasm detected" />
-      </div>
-    </div>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Emotion Detector</h5>
-        <EmotionDetector emotion="N/A" />
-      </div>
-    </div>
-    <div className="mb-3">
-      <div className="p-3">
-        <h5 className="text-center">Aspect-Based Sentiment Analysis</h5>
-        <AspectsDetector aspects="Product quality, Service efficiency, Delivery speed" />
-      </div>
-    </div>
-    {results.map((r, i) => (
-      <div key={i} className="mb-3">
-        <div className="p-3">
-          <h5 className="text-center">Feedback Classification</h5>
-          <ClassificationDetector classification={r.classification} />
-          <h5 className="text-center">Emotion Detector</h5>
-          <EmotionDetector emotion={r.emotion} />
-          <h5 className="text-center">Aspect-Based Sentiment Analysis</h5>
-          <AspectsDetector aspects={r.aspects} />
-          <h5 className="text-center">Sarcasm Detector</h5>
-          <SarcasmDetector sarcasm={r.sarcasm} />
+    <div className="container-fluid p-0">
+      <div className="row m-0">
+        <div className="col-md-6 p-3">
+          <div className="feedback-panel">
+            <h5>Customer Feedback Analysis</h5>
+            <form onSubmit={handleAnalyze}>
+              <div className="mb-3">
+                <label htmlFor="file" className="file-input-label">Choose File</label>
+                <input
+                  type="file"
+                  id="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="form-control"
+                />
+                <small className="text-muted">CSV should have feedback text in the first column</small>
+              </div>
+              
+              <button 
+                type="submit" 
+                className="analyze-btn"
+                disabled={loading || !file}
+              >
+                {loading ? 'Analyzing...' : 'Analyze & Generate'}
+              </button>
+            </form>
+            
+            {error && (
+              <div className="alert alert-danger mt-3">
+                {error}
+              </div>
+            )}
+            
+            {csvContent && error && (
+              <div className="mt-3">
+                <details>
+                  <summary>CSV Debug Info</summary>
+                  <pre className="border p-2 mt-2" style={{ maxHeight: '150px', overflow: 'auto' }}>
+                    {csvContent}
+                  </pre>
+                </details>
+              </div>
+            )}
+            
+            <div className="response-area mt-4">
+              <p className="text-muted">
+                {results.length > 0 
+                  ? current.response 
+                  : "AI-generated response will appear here"}
+              </p>
+            </div>
+            
+            {results.length > 0 && (
+              <button className="approve-btn">
+                Approve & Send
+              </button>
+            )}
+          </div>
+        </div>
+        
+        <div className="col-md-6 p-3">
+          <div className="sentiment-report">
+            <h5 className="text-center mb-4">Sentiment Analysis Report</h5>
+            
+            <ClassificationDetector classification={current.classification} />
+            <EmotionDetector emotion={current.emotion} />
+            <SarcasmDetector sarcasm={current.sarcasm} />
+            <AspectsDetector aspects={current.aspects} />
+          </div>
+          
+          {results.length > 1 && (
+            <div className="mt-3">
+              <label htmlFor="feedback-selector" className="form-label">Select Feedback Item:</label>
+              <select
+                id="feedback-selector"
+                className="form-select"
+                value={selectedIndex}
+                onChange={(e) => setSelectedIndex(Number(e.target.value))}
+              >
+                {results.map((_, index) => (
+                  <option key={index} value={index}>
+                    Feedback {index + 1}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
-    ))}
-  </div>
-</div>
     </div>
   );
 };
-
 
 export default WebApp;

@@ -1,0 +1,173 @@
+.header-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.header-icons button {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background-color: #1b1f38; /* Dark header blue */
+  color: #ffffff; /* White text */
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.header-icons button:hover {
+  background-color: #344288; /* Lighter blue on hover */
+}
+
+.topbar {
+  background-color: #bfbebe; /* Light grey background */
+  width: 100%;
+}
+
+/* Fix for React root container */
+#root {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.web-app {
+  background-color: #f5e6dc; /* Beige background */
+  min-height: calc(100vh - 70px); /* Full height minus header */
+  width: 100%;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.min-vh-100 {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Full width container */
+.container-fluid {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* Custom styles for the app layout */
+.feedback-panel {
+  background-color: #f8f0e7;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  height: 100%;
+}
+
+.analysis-panel {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  height: 100%;
+}
+
+.analyze-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.analyze-btn:hover {
+  background-color: #45a049;
+}
+
+.approve-btn {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.approve-btn:hover {
+  background-color: #0b7dda;
+}
+
+.result-box {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.sentiment-report {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  height: 100%;
+}
+
+.response-area {
+  min-height: 200px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Make the file input look better */
+.file-input-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* Fix the layout to use full width */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Reset Bootstrap max-width constraints */
+.col-md-6 {
+  padding: 15px;
+}
+
+/* Force full width on all container elements */
+body > div, 
+body > div > div, 
+.web-app > div,
+#root > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Main app content */
+.app-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
