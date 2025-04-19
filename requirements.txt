@@ -1,4 +1,4 @@
-Flask==3.1.0
+Flask==2.2.3
 pyodbc
 openai
 pandas
@@ -10,13 +10,14 @@ distlib
 filelock
 itsdangerous
 Jinja2
-markupSafe
+MarkupSafe
+packaging
 platformdirs
 pycparser
 pycryptodome
 PyMySQL
 virtualenv
-werkzeug
+Werkzeug
 # build
 setuptools
 gunicorn
@@ -25,18 +26,10 @@ numpy
 scikit-learn
 transformers
 torch
-packaging==24.2
+packinging
 azure-ai-inference
+flask-cors
 # or "tensorflow" if you'd rather use TF as a backend for transformers
 # Include any other libraries from your zipped code or training scripts
 # after this line requirements on backend 
-# Flask==2.2.3
-# pyodbc==4.0.35
-# openai==0.27.0
-# pandas==1.5.3
-# numpy==1.24.2
-# scikit-learn==1.2.2
-# transformers==4.28.1
-# torch==2.0.0
-# gunicorn==23.0.0
-# azure-ai-inference
+joblib

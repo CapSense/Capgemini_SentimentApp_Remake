@@ -2,60 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Capsense AI</title>
+    <style>
+      /* Override bootstrap container width constraints */
+      body, html {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+        overflow-x: hidden;
+      }
+      
+      #root {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      
+      .container, 
+      .container-fluid, 
+      .container-lg, 
+      .container-md, 
+      .container-sm, 
+      .container-xl, 
+      .container-xxl {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .row {
+        width: 100% !important;
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const form = document.querySelector('form');
-      const textarea = document.querySelector('textarea');
-      const fileInput = document.querySelector('input[type="file"]');
-
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-
-        let customerText = textarea.value.trim();
-
-        if (!customerText && fileInput.files.length > 0) {
-          const file = fileInput.files[0];
-          const text = await file.text();
-          customerText = text.trim();
-        }
-
-        if (!customerText) {
-          alert('Please paste some feedback or upload a file.');
-          return;
-        }
-
-        try {
-          const response = await fetch('/api/respond', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ customer_text: customerText })
-          });
-
-          if (!response.ok) {
-            throw new Error('Server error');
-          }
-
-          const result = await response.json();
-          console.log('AI Response:', result);
-          alert(`AI Response: ${result.ai_response.response_text}`);
-        } catch (error) {
-          console.error('Error:', error);
-          alert('Something went wrong. Please try again.');
-        }
-      });
-    });
-  </script>
   </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
-# Log enable
->>>>>>> 8a8a89947a59b7e1a20d95b15c09a68e5329380a

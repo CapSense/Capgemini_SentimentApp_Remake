@@ -32,8 +32,9 @@ numpy
 scikit-learn
 transformers
 torch
-packinging
+packaging
 azure-ai-inference
+flask-cors
 
 # or "tensorflow" if you'd rather use TF as a backend for transformers
 # Include any other libraries from your zipped code or training scripts

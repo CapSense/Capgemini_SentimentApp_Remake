@@ -11,7 +11,7 @@ const ClassificationDetector = ({ classification }: { classification: string }) 
             name="classification"
             id="pos"
             autoComplete="off"
-            checked={classification === 'pos'}
+            checked={classification === 'positive'}
             readOnly
           />
           <label className="btn btn-outline-primary" htmlFor="pos">Positive</label>
@@ -22,7 +22,7 @@ const ClassificationDetector = ({ classification }: { classification: string }) 
             name="classification"
             id="neut"
             autoComplete="off"
-            checked={classification === 'neut'}
+            checked={classification === 'neutral'}
             readOnly
           />
           <label className="btn btn-outline-primary" htmlFor="neut">Neutral</label>
@@ -33,7 +33,7 @@ const ClassificationDetector = ({ classification }: { classification: string }) 
             name="classification"
             id="neg"
             autoComplete="off"
-            checked={classification === 'neg'}
+            checked={classification === 'negative'}
             readOnly
           />
           <label className="btn btn-outline-primary" htmlFor="neg">Negative</label>

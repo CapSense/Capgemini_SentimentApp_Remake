@@ -1,36 +1,56 @@
-# classifier_sentiment.py
-
-import joblib
 import os
+import joblib
+import numpy as np
 
-# Define the base directory for models using relative path to backend/models
-BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
-
-# Store and load the model/vectorizer from the 'models/' folder
+# Define the base directory for models using absolute path
+BASE_DIR = '/home/azureuser/Capgemini_SentimentApp_Remake/backend/models'
 MODEL_PATH = os.path.join(BASE_DIR, "sentiment_classifier.pkl")
+# changed it from ...sentiment_vectorizer.pkl to just 'vectorizer.pkl' though i don't know if theres training in there
+
 VECTORIZER_PATH = os.path.join(BASE_DIR, "vectorizer.pkl")
 
+# Initialize model and vectorizer as None
 model = None
 vectorizer = None
 
-if os.path.exists(MODEL_PATH) and os.path.exists(VECTORIZER_PATH):
-    try:
+# Try to load the model and vectorizer if they exist
+try:
+    if os.path.exists(MODEL_PATH) and os.path.exists(VECTORIZER_PATH):
         model = joblib.load(MODEL_PATH)
         vectorizer = joblib.load(VECTORIZER_PATH)
         print(f"Loaded sentiment model from {MODEL_PATH}")
         print(f"Loaded sentiment vectorizer from {VECTORIZER_PATH}")
-    except Exception as e:
-        print(f"Error loading sentiment model or vectorizer: {str(e)}")
-else:
-    print(f"Warning: Sentiment model or vectorizer not found. Looked at {MODEL_PATH} and {VECTORIZER_PATH}")
+    else:
+        print(f"Warning: Local sentiment model not found at {MODEL_PATH} or {VECTORIZER_PATH}")
+except Exception as e:
+    print(f"Warning: Failed to load local sentiment model: {str(e)}")
+    model, vectorizer = None, None
 
 def classify_sentiment(text):
     """
     Returns a dict like {"sentiment": "Positive", "confidence": 0.85} or similar.
-    If you have a local Naive Bayes model, do:
-      - vectorize text
-      - predict with model
+    If local model is not available, provides a basic fallback.
     """
+    # Access the global model and vectorizer
+    global model, vectorizer
+    
+    # Make sure text is a string
+    try:
+        if isinstance(text, (int, float)) or hasattr(text, 'dtype'):  # Handle numpy types
+            text = str(text)
+        
+        if not text or not text.strip():
+            return {
+                "sentiment": "Neutral",
+                "confidence": 0.5
+            }
+    except Exception as e:
+        print(f"Error converting input to string: {e}")
+        return {
+            "sentiment": "Neutral",
+            "confidence": 0.5
+        }
+        
     if model and vectorizer:
         try:
             X_vectorized = vectorizer.transform([text])
@@ -48,8 +68,20 @@ def classify_sentiment(text):
                 "confidence": 0.5
             }
     else:
-        # fallback or no model
-        return {
-            "sentiment": "Neutral",
-            "confidence": 0.5
-        }
+        # Basic fallback logic if no model is available
+        text_lower = text.lower()
+        if any(word in text_lower for word in ["great", "love", "excellent", "amazing", "good", "happy"]):
+            return {
+                "sentiment": "positive",
+                "confidence": 0.7
+            }
+        elif any(word in text_lower for word in ["terrible", "awful", "bad", "hate", "disappointed", "angry"]):
+            return {
+                "sentiment": "negative",
+                "confidence": 0.7
+            }
+        else:
+            return {
+                "sentiment": "neutral",
+                "confidence": 0.5
+            }
