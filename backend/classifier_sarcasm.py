@@ -45,18 +45,32 @@ def detect_sarcasm(text):
     """
     Returns {"sarcasm": bool, "confidence": float}
     """
-    text = text.strip()
-    if not text:
+    # Access global variables
+    global model, vectorizer, sarcasm_detector
+    
+    # Make sure text is a string
+    try:
+        if isinstance(text, (int, float)) or hasattr(text, 'dtype'):  # Handle numpy types
+            text = str(text)
+        
+        text = text.strip()
+        if not text:
+            return {"sarcasm": False, "confidence": 0.0}
+    except Exception as e:
+        print(f"Error converting input to string: {e}")
         return {"sarcasm": False, "confidence": 0.0}
-
-    # Try local model first if available
+    
+    # Try the local model first
     if model and vectorizer:
         try:
+            # Vectorize the text
             text_vectorized = vectorizer.transform([text])
-            prediction = model.predict(text_vectorized)
-            is_sarcastic = (prediction[0] == 1)
-            sarcasm_conf = 0.8 if is_sarcastic else 0.2
-            return {"sarcasm": is_sarcastic, "confidence": sarcasm_conf}
+            
+            # Predict with the model
+            pred_label = model.predict(text_vectorized)[0]
+            confidence = float(model.predict_proba(text_vectorized)[0][1])  # Probability of class 1
+            
+            return {"sarcasm": bool(pred_label == 1), "confidence": confidence}
         except Exception as e:
             print(f"Error using local sarcasm model: {str(e)}")
             # Fall through to Hugging Face if local model fails
@@ -67,14 +81,13 @@ def detect_sarcasm(text):
             result = sarcasm_detector(text)[0]
             label = result["label"]
             score = float(result["score"])
-            is_sarcastic = (label.upper() == "SARCASM")
+            is_sarcastic = (label.upper() == "IRONY") # Note: This model uses "IRONY" rather than "SARCASM"
             return {"sarcasm": is_sarcastic, "confidence": score}
         except Exception as e:
             print(f"Error using Hugging Face sarcasm model: {str(e)}")
     
     # Fallback if both methods fail
     return {"sarcasm": False, "confidence": 0.5}
-
 
 def train_sarcasm_model(dataset_path="sarcasm_dataset.csv"):
     """
@@ -83,8 +96,28 @@ def train_sarcasm_model(dataset_path="sarcasm_dataset.csv"):
     if not os.path.exists(dataset_path):
         return {"error": f"Dataset file '{dataset_path}' not found."}
 
-    data = pd.read_csv(dataset_path)
+    # Try different encodings
+    encodings_to_try = ['utf-8', 'latin1', 'cp1252', 'ISO-8859-1']
+    data = None
+    
+    for encoding in encodings_to_try:
+        try:
+            print(f"Trying to read with {encoding} encoding...")
+            data = pd.read_csv(dataset_path, encoding=encoding)
+            print(f"Successfully read with {encoding} encoding")
+            break
+        except UnicodeDecodeError:
+            print(f"Failed to read with {encoding} encoding")
+            continue
+    
+    if data is None:
+        return {"error": "Could not read the dataset with any of the attempted encodings."}
+
     if "text" not in data.columns or "label" not in data.columns:
+        # Try to guess columns if standard names aren't found
+        print("Standard columns 'text' and 'label' not found. Available columns:")
+        for col in data.columns:
+            print(f"  {col}")
         return {"error": "Dataset must have 'text' and 'label' columns."}
 
     data = data.dropna(subset=["text", "label"])
