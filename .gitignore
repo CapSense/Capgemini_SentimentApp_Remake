@@ -1,3 +1,48 @@
-/backend/__pycache__
-/backend/venv/Lib
-/backend/node_modules
+# Python virtual environments
+venv/
+myenv/
+backend/venv/
+backend/myenv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pkl
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Environment variables / secrets
+.env
+systemd_env
+
+# Node modules (frontend)
+frontend/node_modules/
+frontend/node_modules/.vite/
+frontend/node_modules/@rollup/
+
+# Frontend build output
+frontend/dist/
+frontend/dist/assets/
+
+# Test data and scratch files
+*.csv
+*.tsv
+*.log
+*.tmp
+*.bak
+
+# Old/backup/test/dev scripts
+*_old.*
+test_*.py
+direct_test.py
+inspect_csv.py
+train_*.py
+
+# Shell scripts
+deploy.sh
+
+# Editor/system files
+.DS_Store
+*.swp
+Thumbs.db
